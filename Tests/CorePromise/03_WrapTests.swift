@@ -1,6 +1,8 @@
 import PromiseKit
 import XCTest
 
+typealias ResolveCallback = (Int?, Error?) -> Void
+
 class WrapTests: XCTestCase {
     class KittenFetcher {
         let value: Int?
@@ -11,7 +13,7 @@ class WrapTests: XCTestCase {
             self.error = error
         }
 
-        func fetchWithCompletionBlock(block: (Int?, Error?) -> Void) {
+        func fetchWithCompletionBlock(block: ResolveCallback) {
             if value != nil {
                 block(value, nil)
             } else {
@@ -22,7 +24,8 @@ class WrapTests: XCTestCase {
 
     func testSuccess() {
         let kittenFetcher = KittenFetcher(value: 2, error: nil)
-        let promise = PromiseKit.wrap { resolve in
+        
+        let promise = PromiseKit.wrap { (resolve: ResolveCallback) -> Void in
             kittenFetcher.fetchWithCompletionBlock(block: resolve)
         }
 
@@ -38,7 +41,7 @@ class WrapTests: XCTestCase {
         let ex = expectation(description: "")
 
         let kittenFetcher = KittenFetcher(value: nil, error: Error.test)
-        let promise = PromiseKit.wrap { resolve in
+        let promise = PromiseKit.wrap { (resolve: ResolveCallback) -> Void in
             kittenFetcher.fetchWithCompletionBlock(block: resolve)
         }.catch { error in
             if case Error.test = error {
@@ -57,7 +60,7 @@ class WrapTests: XCTestCase {
         let ex = expectation(description: "")
 
         let kittenFetcher = KittenFetcher(value: nil, error: nil)
-        let promise = PromiseKit.wrap { resolve in
+        let promise = PromiseKit.wrap { (resolve: ResolveCallback) -> Void in
             kittenFetcher.fetchWithCompletionBlock(block: resolve)
         }.catch { error in
             if case PMKError.invalidCallingConvention = error {
